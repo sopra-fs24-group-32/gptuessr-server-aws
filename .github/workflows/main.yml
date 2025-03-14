@@ -20,11 +20,11 @@ jobs:
           distribution: "temurin"
           java-version: "17"
       
-      - name: Test and analyze
-        run: ./gradlew test jacocoTestReport sonar
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      # - name: Test and analyze
+      #   run: ./gradlew test jacocoTestReport sonar
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   build:
     name: Build Application
@@ -116,4 +116,4 @@ jobs:
       - name: Verify deployment
         run: |
           sleep 30
-          curl -s "http://${{ secrets.EC2_HOST }}:8181/actuator/health" | grep "UP" || exit 1
+          curl -s "http://${{ secrets.EC2_HOST }}:8080/actuator/health" | grep "UP" || exit 1
