@@ -5,7 +5,6 @@ on:
       - main
   # run the workflow manually from the Actions tab
   workflow_dispatch:
-
 jobs:
   build:
     name: Build
@@ -13,48 +12,39 @@ jobs:
     steps:
       - name: Checkout repository code
         uses: actions/checkout@v4
-
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           distribution: "temurin"
           java-version: "17"
-
       - name: Set up Gradle
         uses: gradle/gradle-build-action@v2
-
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
-
       - name: Write API Key to application.properties
         run: |
           echo "dall.e.api.key=${{ secrets.DALL_E_API_KEY }}" >> src/main/resources/application-production.properties
-
       - name: Build with Gradle
         run: ./gradlew clean bootJar
-
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
         with:
           name: application-jar
           path: build/libs/*.jar
-
   test:
     name: Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository code
         uses: actions/checkout@v4
-
       - name: Install Java 17
         uses: actions/setup-java@v3
         with:
           distribution: "temurin"
           java-version: "17"
-
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
-      
+     
       # - name: Test and analyze
       #   run: ./gradlew test
         # Uncomment if you want to use SonarQube
@@ -62,7 +52,6 @@ jobs:
         # env:
         #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         #   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
   deploy:
     name: Deploy to AWS EC2
     runs-on: ubuntu-latest
@@ -92,9 +81,16 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/key.pem
           chmod 600 ~/.ssh/key.pem
-          ssh-keyscan ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-        
-      - name: Deploy to EC2
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+      
+      - name: Ensure deployment directory exists
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key.pem ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
+            sudo mkdir -p /opt/springboot/app
+            sudo chown ${{ secrets.EC2_USERNAME }}:${{ secrets.EC2_USERNAME }} /opt/springboot/app
+          "
+       
+      - name: Copy JAR to EC2
         run: |
           scp -o StrictHostKeyChecking=no -i ~/.ssh/key.pem build/libs/*.jar ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/opt/springboot/app/
      
@@ -104,19 +100,19 @@ jobs:
             cd /opt/springboot/app
             JAR_FILE=\$(ls -t *.jar | head -1)
             echo \"Using JAR file: \$JAR_FILE\"
-              
+             
             # Stop the service
             sudo systemctl stop springboot.service
-              
+             
             # Create symlink to the latest jar
             if [ -L \"application.jar\" ]; then
               sudo rm application.jar
             fi
             sudo ln -s \$JAR_FILE application.jar
-              
+             
             # Start the service
             sudo systemctl start springboot.service
-              
+             
             # Check if service is running
             sudo systemctl status springboot.service
           "
