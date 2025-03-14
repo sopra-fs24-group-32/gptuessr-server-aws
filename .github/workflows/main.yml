@@ -145,6 +145,36 @@ jobs:
             cd /opt/springboot/app
             JAR_FILE=\$(ls -t *.jar | head -1)
             echo \"Using JAR file: \$JAR_FILE\"
+
+            # Create environment variable file for systemd
+            echo 'Creating environment file...'
+            echo 'CLERK_API_KEY=${{ secrets.CLERK_API_KEY }}
+            CLERK_FRONTEND_API=${{ secrets.CLERK_FRONTEND_API }}
+            CLERK_ALLOWED_ORIGINS=${{ secrets.CLERK_ALLOWED_ORIGINS }}
+            CLERK_WEBHOOK_SECRET=${{ secrets.CLERK_WEBHOOK_SECRET }}
+            CLERK_API_URL=${{ secrets.CLERK_API_URL }}
+            MONGO_DB_URI=${{ secrets.MONGO_DB_URI }}
+            MONGO_DB_NAME=${{ secrets.MONGO_DB_NAME }}
+            MONGO_DB_USERNAME=${{ secrets.MONGO_DB_USERNAME }}
+            MONGO_DB_PASSWORD=${{ secrets.MONGO_DB_PASSWORD }}' | sudo tee /opt/springboot/app/application.env > /dev/null
+
+            # Update service file to use environment file
+            echo '[Unit]
+            Description=Spring Boot Application
+            After=network.target
+            
+            [Service]
+            User=${{ secrets.EC2_USERNAME }}
+            WorkingDirectory=/opt/springboot/app
+            EnvironmentFile=/opt/springboot/app/application.env
+            ExecStart=\$(which java) -jar /opt/springboot/app/application.jar
+            SuccessExitStatus=143
+            TimeoutStopSec=10
+            Restart=on-failure
+            RestartSec=5
+            
+            [Install]
+            WantedBy=multi-user.target' | sudo tee /etc/systemd/system/springboot.service > /dev/null
             
             # Try to stop the service if it exists, but don't fail if it doesn't
             sudo systemctl stop springboot.service || true
