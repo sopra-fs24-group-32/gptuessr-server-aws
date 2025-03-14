@@ -98,28 +98,28 @@ jobs:
         run: |
           scp -i ~/.ssh/key.pem build/libs/*.jar ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/opt/springboot/app/
      
-          - name: Deploy and restart service
-          run: |
-            ssh -i ~/.ssh/key.pem ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
-              cd /opt/springboot/app
-              JAR_FILE=\$(ls -t *.jar | head -1)
-              echo \"Using JAR file: \$JAR_FILE\"
+      - name: Deploy and restart service
+        run: |
+          ssh -i ~/.ssh/key.pem ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
+            cd /opt/springboot/app
+            JAR_FILE=\$(ls -t *.jar | head -1)
+            echo \"Using JAR file: \$JAR_FILE\"
               
-              # Stop the service
-              sudo systemctl stop springboot.service
+            # Stop the service
+            sudo systemctl stop springboot.service
               
-              # Create symlink to the latest jar
-              if [ -L \"application.jar\" ]; then
-                sudo rm application.jar
-              fi
-              sudo ln -s \$JAR_FILE application.jar
+            # Create symlink to the latest jar
+            if [ -L \"application.jar\" ]; then
+              sudo rm application.jar
+            fi
+            sudo ln -s \$JAR_FILE application.jar
               
-              # Start the service
-              sudo systemctl start springboot.service
+            # Start the service
+            sudo systemctl start springboot.service
               
-              # Check if service is running
-              sudo systemctl status springboot.service
-            "
+            # Check if service is running
+            sudo systemctl status springboot.service
+          "
      
       - name: Verify deployment
         run: |
