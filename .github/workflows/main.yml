@@ -87,41 +87,39 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
      
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/key.pem
+          chmod 600 ~/.ssh/key.pem
+          ssh-keyscan ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+        
       - name: Deploy to EC2
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "build/libs/*.jar"
-          target: "/opt/springboot/app"
-          strip_components: 2
+        run: |
+          scp -i ~/.ssh/key.pem build/libs/*.jar ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/opt/springboot/app/
      
-      - name: Deploy and restart service
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            cd /opt/springboot/app
-            JAR_FILE=$(ls -t *.jar | head -1)
-            echo "Using JAR file: $JAR_FILE"
-           
-            # Stop the service
-            sudo systemctl stop springboot.service
-           
-            # Create symlink to the latest jar
-            if [ -L "application.jar" ]; then
-              sudo rm application.jar
-            fi
-            sudo ln -s $JAR_FILE application.jar
-           
-            # Start the service
-            sudo systemctl start springboot.service
-           
-            # Check if service is running
-            sudo systemctl status springboot.service
+          - name: Deploy and restart service
+          run: |
+            ssh -i ~/.ssh/key.pem ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
+              cd /opt/springboot/app
+              JAR_FILE=\$(ls -t *.jar | head -1)
+              echo \"Using JAR file: \$JAR_FILE\"
+              
+              # Stop the service
+              sudo systemctl stop springboot.service
+              
+              # Create symlink to the latest jar
+              if [ -L \"application.jar\" ]; then
+                sudo rm application.jar
+              fi
+              sudo ln -s \$JAR_FILE application.jar
+              
+              # Start the service
+              sudo systemctl start springboot.service
+              
+              # Check if service is running
+              sudo systemctl status springboot.service
+            "
      
       - name: Verify deployment
         run: |
