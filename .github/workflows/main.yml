@@ -96,7 +96,7 @@ jobs:
         
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key.pem build/libs/*.jar ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/opt/springboot/app/
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/key.pem build/libs/*.jar ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/opt/springboot/app/
      
       - name: Deploy and restart service
         run: |
