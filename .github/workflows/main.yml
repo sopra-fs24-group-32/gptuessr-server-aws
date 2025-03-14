@@ -116,4 +116,4 @@ jobs:
       - name: Verify deployment
         run: |
           sleep 30
-          curl -s "http://${{ secrets.EC2_HOST }}:8080/actuator/health" | grep "UP" || exit 1
+          curl -s "http://${{ secrets.EC2_HOST }}:8181/actuator/health" | grep "UP" || exit 1
