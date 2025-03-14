@@ -1,0 +1,50 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.4.3'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.gptuessr'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+	implementation 'io.github.cdimascio:dotenv-java:3.0.0'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+
+// Task to run with dotenv support
+task runWithDotEnv(type: JavaExec) {
+    group = 'application'
+    description = 'Run the Spring Boot application with dotenv support'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.gptuessr.ai_game.AiGameApplication'  // Update with your main class
+    
+    // Enable debug for hot reload
+    jvmArgs = [
+        '-Dspring.devtools.restart.enabled=true',
+        '-Dspring.devtools.livereload.enabled=true'
+    ]
+}
