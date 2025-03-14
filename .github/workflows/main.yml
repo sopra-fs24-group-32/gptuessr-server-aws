@@ -100,7 +100,7 @@ jobs:
      
       - name: Deploy and restart service
         run: |
-          ssh -i ~/.ssh/key.pem ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key.pem ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
             cd /opt/springboot/app
             JAR_FILE=\$(ls -t *.jar | head -1)
             echo \"Using JAR file: \$JAR_FILE\"
